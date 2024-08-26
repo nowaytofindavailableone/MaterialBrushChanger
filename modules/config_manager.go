@@ -92,28 +92,33 @@ func getRedkitPath(config *Config) (string, error) {
 	}
 
 	fmt.Println("No valid configuration found for REDkit.")
-	fmt.Println("Please select the folder path to The Witcher 3 REDkit or bin directory (bin\\r4LavaEditor2.sessions.ini).")
+	fmt.Println("Please select the folder path to The Witcher 3 REDkit folder")
 
 	// Открываем диалог для выбора директории
-	folder, err := dialog.Directory().Title("Select The Witcher 3 REDkit or bin Folder").Browse()
+	folder, err := dialog.Directory().Title("Select The Witcher 3 REDkit folder").Browse()
 	if err != nil {
 		return "", fmt.Errorf("ошибка выбора директории: %v", err)
 	}
 
 	var fullPath string
 
-	// Проверка, содержит ли путь подпапку "The Witcher 3 REDkit"
+	if strings.HasSuffix(strings.ToLower(folder), "bin") {
+		fmt.Println()
+		// Если путь содержит "bin", добавляем r4LavaEditor2.sessions.ini
+		fullPath = filepath.Join(folder, "r4LavaEditor2.sessions.ini")
+		fmt.Println("Путь, сформированный в ветке bin:", fullPath) // Отладочная информация
+
+	} else // Проверка, содержит ли путь подпапку "The Witcher 3 REDkit"
 	if strings.Contains(strings.ToLower(folder), "the witcher 3 redkit") {
 		// Если выбран путь к The Witcher 3 REDkit, добавляем bin и r4LavaEditor2.sessions.ini
 		fullPath = filepath.Join(folder, "bin", "r4LavaEditor2.sessions.ini")
-	} else if strings.HasSuffix(strings.ToLower(folder), "bin") {
-		// Если пользователь выбрал директорию bin, используем ее напрямую
-		fullPath = filepath.Join(folder, "r4LavaEditor2.sessions.ini")
+		fmt.Println("Путь, сформированный в ветке The Witcher 3 REDkit:", fullPath) // Отладочная информация
 	} else {
 		// Если путь не содержит ни REDkit, ни bin, ищем "The Witcher 3 REDkit\bin" внутри
 		redkitBinPath := filepath.Join(folder, "The Witcher 3 REDkit", "bin", "r4LavaEditor2.sessions.ini")
 		if FileExists(redkitBinPath) {
 			fullPath = redkitBinPath
+			fmt.Println("Путь, сформированный в ветке The Witcher 3 REDkit\\bin:", fullPath) // Отладочная информация
 		} else {
 			// Если путь не содержит ни REDkit, ни bin, и не найден "The Witcher 3 REDkit\bin" внутри, возвращаем ошибку
 			return "", fmt.Errorf("ошибка: выбранная директория не содержит ни 'The Witcher 3 REDkit', ни 'bin', ни 'The Witcher 3 REDkit\\bin'")
@@ -122,7 +127,7 @@ func getRedkitPath(config *Config) (string, error) {
 
 	// Проверяем существование файла
 	if !FileExists(fullPath) {
-		return "", fmt.Errorf("ошибка: файл r4LavaEditor2.sessions.ini не найден в выбранной папке")
+		return "", fmt.Errorf("ошибка: файл r4LavaEditor2.sessions.ini не найден по пути: %s", fullPath)
 	}
 
 	// Сохраняем путь в конфигурацию
